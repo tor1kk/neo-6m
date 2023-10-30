@@ -75,9 +75,9 @@ uint8_t NEO6M_AddExpectedMessage(NEO6M_Handle_t *handle, MessagesTypes_t message
 	/* If MCU doesn't receive messages from module yet, starts receiving and updates status flag */
 	if(!flag)
 	{
-		if(handle->receive_status == FREE)
+		if(handle->receive_status == NEO_FREE)
 		{
-			handle->receive_status = WAITING;
+			handle->receive_status = NEO_WAITING;
 			if(HAL_UART_Receive_IT(GPS_UART, (uint8_t *)&handle->rcvdByte, 1) != HAL_OK)
 			{
 				flag = 1;
@@ -108,7 +108,7 @@ uint8_t NEO6M_RemoveExpectedMessage(NEO6M_Handle_t *handle, MessagesTypes_t mess
 			//If no messages expects - finishes receiving
 			if(handle->expectedMessagesCount < 1)
 			{
-				handle->receive_status = FREE;
+				handle->receive_status = NEO_FREE;
 			}
 			return 0;
 		}

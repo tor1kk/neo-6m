@@ -43,8 +43,8 @@ typedef enum
 
 typedef enum
 {
-	FREE,									/*!< MCU doesn't receive any messages */
-	WAITING									/*!< MCU receiving messages */
+	NEO_FREE,								/*!< MCU doesn't receive any messages */
+	NEO_WAITING								/*!< MCU receiving messages */
 }ReceiveStatus_t;
 
 
@@ -65,7 +65,6 @@ typedef struct
 	char rcvdByte;							/*!< Variable for receiving messages byte by byte */
 	char rxBuff[RX_BUFFER_SIZE];			/*!< Receive buffer */
 	size_t rxCounter;						/*!< Counter of bytes that were receive */
-
 }NEO6M_Handle_t;
 
 
@@ -199,6 +198,7 @@ typedef struct
     char mvE;     		     				/*!< E/W indicator for magnetic variation, E=east or W=west */
     char mode;      						/*!< Mode Indicator (A=Autonomous, D=Differential, E=Estimated, N=Data not valid) */
     uint16_t cs;              				/*!< Checksum */
+
 }RMC_Package_t;
 
 
@@ -221,7 +221,7 @@ typedef struct
 
 
 /*********************************************************************************************
- *									Function declarations
+ *									Function declarations 
  ********************************************************************************************/
 
 /*

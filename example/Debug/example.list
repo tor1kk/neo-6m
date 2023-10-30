@@ -41,11 +41,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  18 .debug_line   0000a600  00000000  00000000  00042e7c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    00086c19  00000000  00000000  0004d47c  2**0
+ 19 .debug_str    00086c62  00000000  00000000  0004d47c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_frame  00003620  00000000  00000000  000d4098  2**2
+ 20 .debug_frame  00003620  00000000  00000000  000d40e0  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000061  00000000  00000000  000d76b8  2**0
+ 21 .debug_line_str 00000061  00000000  00000000  000d7700  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1324,31 +1324,74 @@ Disassembly of section .text:
  8000ffe:	bf00      	nop
 
 08001000 <main>:
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
  8001000:	b580      	push	{r7, lr}
  8001002:	af00      	add	r7, sp, #0
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
  8001004:	f001 f880 	bl	8002108 <HAL_Init>
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
  8001008:	f000 f812 	bl	8001030 <SystemClock_Config>
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
  800100c:	f000 f8c4 	bl	8001198 <MX_GPIO_Init>
+  MX_USART1_UART_Init();
  8001010:	f000 f86e 	bl	80010f0 <MX_USART1_UART_Init>
+  MX_USART2_UART_Init();
  8001014:	f000 f896 	bl	8001144 <MX_USART2_UART_Init>
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
+	  NEO6M_AddExpectedMessage(&neo6mh, RMC);
  8001018:	2105      	movs	r1, #5
  800101a:	4804      	ldr	r0, [pc, #16]	; (800102c <main+0x2c>)
  800101c:	f000 f928 	bl	8001270 <NEO6M_AddExpectedMessage>
+
+	  HAL_Delay(5000);
  8001020:	f241 3088 	movw	r0, #5000	; 0x1388
  8001024:	f001 f8e2 	bl	80021ec <HAL_Delay>
+	  NEO6M_AddExpectedMessage(&neo6mh, RMC);
  8001028:	e7f6      	b.n	8001018 <main+0x18>
  800102a:	bf00      	nop
  800102c:	2000027c 	.word	0x2000027c
 
 08001030 <SystemClock_Config>:
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
  8001030:	b580      	push	{r7, lr}
  8001032:	b094      	sub	sp, #80	; 0x50
  8001034:	af00      	add	r7, sp, #0
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
  8001036:	f107 0320 	add.w	r3, r7, #32
  800103a:	2230      	movs	r2, #48	; 0x30
  800103c:	2100      	movs	r1, #0
  800103e:	4618      	mov	r0, r3
  8001040:	f004 ff39 	bl	8005eb6 <memset>
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
  8001044:	f107 030c 	add.w	r3, r7, #12
  8001048:	2200      	movs	r2, #0
  800104a:	601a      	str	r2, [r3, #0]
@@ -1356,6 +1399,10 @@ Disassembly of section .text:
  800104e:	609a      	str	r2, [r3, #8]
  8001050:	60da      	str	r2, [r3, #12]
  8001052:	611a      	str	r2, [r3, #16]
+
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
  8001054:	2300      	movs	r3, #0
  8001056:	60bb      	str	r3, [r7, #8]
  8001058:	4b23      	ldr	r3, [pc, #140]	; (80010e8 <SystemClock_Config+0xb8>)
@@ -1368,6 +1415,7 @@ Disassembly of section .text:
  8001068:	f003 5380 	and.w	r3, r3, #268435456	; 0x10000000
  800106c:	60bb      	str	r3, [r7, #8]
  800106e:	68bb      	ldr	r3, [r7, #8]
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
  8001070:	2300      	movs	r3, #0
  8001072:	607b      	str	r3, [r7, #4]
  8001074:	4b1d      	ldr	r3, [pc, #116]	; (80010ec <SystemClock_Config+0xbc>)
@@ -1381,31 +1429,54 @@ Disassembly of section .text:
  8001088:	f403 4340 	and.w	r3, r3, #49152	; 0xc000
  800108c:	607b      	str	r3, [r7, #4]
  800108e:	687b      	ldr	r3, [r7, #4]
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
  8001090:	2302      	movs	r3, #2
  8001092:	623b      	str	r3, [r7, #32]
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
  8001094:	2301      	movs	r3, #1
  8001096:	62fb      	str	r3, [r7, #44]	; 0x2c
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
  8001098:	2310      	movs	r3, #16
  800109a:	633b      	str	r3, [r7, #48]	; 0x30
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
  800109c:	2300      	movs	r3, #0
  800109e:	63bb      	str	r3, [r7, #56]	; 0x38
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
  80010a0:	f107 0320 	add.w	r3, r7, #32
  80010a4:	4618      	mov	r0, r3
  80010a6:	f001 fbed 	bl	8002884 <HAL_RCC_OscConfig>
  80010aa:	4603      	mov	r3, r0
  80010ac:	2b00      	cmp	r3, #0
  80010ae:	d001      	beq.n	80010b4 <SystemClock_Config+0x84>
+  {
+    Error_Handler();
  80010b0:	f000 f8d8 	bl	8001264 <Error_Handler>
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
  80010b4:	230f      	movs	r3, #15
  80010b6:	60fb      	str	r3, [r7, #12]
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
  80010b8:	2300      	movs	r3, #0
  80010ba:	613b      	str	r3, [r7, #16]
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
  80010bc:	2300      	movs	r3, #0
  80010be:	617b      	str	r3, [r7, #20]
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
  80010c0:	f44f 5380 	mov.w	r3, #4096	; 0x1000
  80010c4:	61bb      	str	r3, [r7, #24]
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
  80010c6:	2300      	movs	r3, #0
  80010c8:	61fb      	str	r3, [r7, #28]
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
  80010ca:	f107 030c 	add.w	r3, r7, #12
  80010ce:	2100      	movs	r1, #0
  80010d0:	4618      	mov	r0, r3
@@ -1413,7 +1484,11 @@ Disassembly of section .text:
  80010d6:	4603      	mov	r3, r0
  80010d8:	2b00      	cmp	r3, #0
  80010da:	d001      	beq.n	80010e0 <SystemClock_Config+0xb0>
+  {
+    Error_Handler();
  80010dc:	f000 f8c2 	bl	8001264 <Error_Handler>
+  }
+}
  80010e0:	bf00      	nop
  80010e2:	3750      	adds	r7, #80	; 0x50
  80010e4:	46bd      	mov	sp, r7
@@ -1422,38 +1497,66 @@ Disassembly of section .text:
  80010ec:	40007000 	.word	0x40007000
 
 080010f0 <MX_USART1_UART_Init>:
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
  80010f0:	b580      	push	{r7, lr}
  80010f2:	af00      	add	r7, sp, #0
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
  80010f4:	4b11      	ldr	r3, [pc, #68]	; (800113c <MX_USART1_UART_Init+0x4c>)
  80010f6:	4a12      	ldr	r2, [pc, #72]	; (8001140 <MX_USART1_UART_Init+0x50>)
  80010f8:	601a      	str	r2, [r3, #0]
+  huart1.Init.BaudRate = 9600;
  80010fa:	4b10      	ldr	r3, [pc, #64]	; (800113c <MX_USART1_UART_Init+0x4c>)
  80010fc:	f44f 5216 	mov.w	r2, #9600	; 0x2580
  8001100:	605a      	str	r2, [r3, #4]
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
  8001102:	4b0e      	ldr	r3, [pc, #56]	; (800113c <MX_USART1_UART_Init+0x4c>)
  8001104:	2200      	movs	r2, #0
  8001106:	609a      	str	r2, [r3, #8]
+  huart1.Init.StopBits = UART_STOPBITS_1;
  8001108:	4b0c      	ldr	r3, [pc, #48]	; (800113c <MX_USART1_UART_Init+0x4c>)
  800110a:	2200      	movs	r2, #0
  800110c:	60da      	str	r2, [r3, #12]
+  huart1.Init.Parity = UART_PARITY_NONE;
  800110e:	4b0b      	ldr	r3, [pc, #44]	; (800113c <MX_USART1_UART_Init+0x4c>)
  8001110:	2200      	movs	r2, #0
  8001112:	611a      	str	r2, [r3, #16]
+  huart1.Init.Mode = UART_MODE_TX_RX;
  8001114:	4b09      	ldr	r3, [pc, #36]	; (800113c <MX_USART1_UART_Init+0x4c>)
  8001116:	220c      	movs	r2, #12
  8001118:	615a      	str	r2, [r3, #20]
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
  800111a:	4b08      	ldr	r3, [pc, #32]	; (800113c <MX_USART1_UART_Init+0x4c>)
  800111c:	2200      	movs	r2, #0
  800111e:	619a      	str	r2, [r3, #24]
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
  8001120:	4b06      	ldr	r3, [pc, #24]	; (800113c <MX_USART1_UART_Init+0x4c>)
  8001122:	2200      	movs	r2, #0
  8001124:	61da      	str	r2, [r3, #28]
+  if (HAL_UART_Init(&huart1) != HAL_OK)
  8001126:	4805      	ldr	r0, [pc, #20]	; (800113c <MX_USART1_UART_Init+0x4c>)
  8001128:	f002 f804 	bl	8003134 <HAL_UART_Init>
  800112c:	4603      	mov	r3, r0
  800112e:	2b00      	cmp	r3, #0
  8001130:	d001      	beq.n	8001136 <MX_USART1_UART_Init+0x46>
+  {
+    Error_Handler();
  8001132:	f000 f897 	bl	8001264 <Error_Handler>
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
  8001136:	bf00      	nop
  8001138:	bd80      	pop	{r7, pc}
  800113a:	bf00      	nop
@@ -1461,38 +1564,66 @@ Disassembly of section .text:
  8001140:	40011000 	.word	0x40011000
 
 08001144 <MX_USART2_UART_Init>:
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
  8001144:	b580      	push	{r7, lr}
  8001146:	af00      	add	r7, sp, #0
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
  8001148:	4b11      	ldr	r3, [pc, #68]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  800114a:	4a12      	ldr	r2, [pc, #72]	; (8001194 <MX_USART2_UART_Init+0x50>)
  800114c:	601a      	str	r2, [r3, #0]
+  huart2.Init.BaudRate = 9600;
  800114e:	4b10      	ldr	r3, [pc, #64]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  8001150:	f44f 5216 	mov.w	r2, #9600	; 0x2580
  8001154:	605a      	str	r2, [r3, #4]
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
  8001156:	4b0e      	ldr	r3, [pc, #56]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  8001158:	2200      	movs	r2, #0
  800115a:	609a      	str	r2, [r3, #8]
+  huart2.Init.StopBits = UART_STOPBITS_1;
  800115c:	4b0c      	ldr	r3, [pc, #48]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  800115e:	2200      	movs	r2, #0
  8001160:	60da      	str	r2, [r3, #12]
+  huart2.Init.Parity = UART_PARITY_NONE;
  8001162:	4b0b      	ldr	r3, [pc, #44]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  8001164:	2200      	movs	r2, #0
  8001166:	611a      	str	r2, [r3, #16]
+  huart2.Init.Mode = UART_MODE_TX_RX;
  8001168:	4b09      	ldr	r3, [pc, #36]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  800116a:	220c      	movs	r2, #12
  800116c:	615a      	str	r2, [r3, #20]
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
  800116e:	4b08      	ldr	r3, [pc, #32]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  8001170:	2200      	movs	r2, #0
  8001172:	619a      	str	r2, [r3, #24]
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
  8001174:	4b06      	ldr	r3, [pc, #24]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  8001176:	2200      	movs	r2, #0
  8001178:	61da      	str	r2, [r3, #28]
+  if (HAL_UART_Init(&huart2) != HAL_OK)
  800117a:	4805      	ldr	r0, [pc, #20]	; (8001190 <MX_USART2_UART_Init+0x4c>)
  800117c:	f001 ffda 	bl	8003134 <HAL_UART_Init>
  8001180:	4603      	mov	r3, r0
  8001182:	2b00      	cmp	r3, #0
  8001184:	d001      	beq.n	800118a <MX_USART2_UART_Init+0x46>
+  {
+    Error_Handler();
  8001186:	f000 f86d 	bl	8001264 <Error_Handler>
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
  800118a:	bf00      	nop
  800118c:	bd80      	pop	{r7, pc}
  800118e:	bf00      	nop
@@ -1500,9 +1631,20 @@ Disassembly of section .text:
  8001194:	40004400 	.word	0x40004400
 
 08001198 <MX_GPIO_Init>:
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
  8001198:	b480      	push	{r7}
  800119a:	b083      	sub	sp, #12
  800119c:	af00      	add	r7, sp, #0
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
  800119e:	2300      	movs	r3, #0
  80011a0:	607b      	str	r3, [r7, #4]
  80011a2:	4b09      	ldr	r3, [pc, #36]	; (80011c8 <MX_GPIO_Init+0x30>)
@@ -1515,6 +1657,10 @@ Disassembly of section .text:
  80011b2:	f003 0301 	and.w	r3, r3, #1
  80011b6:	607b      	str	r3, [r7, #4]
  80011b8:	687b      	ldr	r3, [r7, #4]
+
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
+}
  80011ba:	bf00      	nop
  80011bc:	370c      	adds	r7, #12
  80011be:	46bd      	mov	sp, r7
@@ -1524,12 +1670,19 @@ Disassembly of section .text:
  80011c8:	40023800 	.word	0x40023800
 
 080011cc <HAL_UART_RxCpltCallback>:
+
+/* USER CODE BEGIN 4 */
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
  80011cc:	b580      	push	{r7, lr}
  80011ce:	b082      	sub	sp, #8
  80011d0:	af00      	add	r7, sp, #0
  80011d2:	6078      	str	r0, [r7, #4]
+	NEO6M_MessageHandler(&neo6mh);
  80011d4:	4803      	ldr	r0, [pc, #12]	; (80011e4 <HAL_UART_RxCpltCallback+0x18>)
  80011d6:	f000 f8e9 	bl	80013ac <NEO6M_MessageHandler>
+}
  80011da:	bf00      	nop
  80011dc:	3708      	adds	r7, #8
  80011de:	46bd      	mov	sp, r7
@@ -1538,20 +1691,29 @@ Disassembly of section .text:
  80011e4:	2000027c 	.word	0x2000027c
 
 080011e8 <NEO6M_RMCCallBack>:
+
+void NEO6M_RMCCallBack(void *package)
+{
  80011e8:	b5f0      	push	{r4, r5, r6, r7, lr}
  80011ea:	b0a1      	sub	sp, #132	; 0x84
  80011ec:	af04      	add	r7, sp, #16
  80011ee:	6078      	str	r0, [r7, #4]
+	RMC_Package_t *rmc_package = (RMC_Package_t *)package;
  80011f0:	687b      	ldr	r3, [r7, #4]
  80011f2:	66fb      	str	r3, [r7, #108]	; 0x6c
+	char buff[100];
+
+	sprintf(buff, "\n\rThis is RMC packet - Longitude: %lf Latitude: %lf Time: %ld Checksum: %hx",
  80011f4:	6efb      	ldr	r3, [r7, #108]	; 0x6c
  80011f6:	e9d3 0106 	ldrd	r0, r1, [r3, #24]
  80011fa:	6efb      	ldr	r3, [r7, #108]	; 0x6c
  80011fc:	e9d3 2302 	ldrd	r2, r3, [r3, #8]
  8001200:	6efc      	ldr	r4, [r7, #108]	; 0x6c
  8001202:	6824      	ldr	r4, [r4, #0]
+			rmc_package->longitude, rmc_package->latitude, rmc_package->time, rmc_package->cs);
  8001204:	6efd      	ldr	r5, [r7, #108]	; 0x6c
  8001206:	8eed      	ldrh	r5, [r5, #54]	; 0x36
+	sprintf(buff, "\n\rThis is RMC packet - Longitude: %lf Latitude: %lf Time: %ld Checksum: %hx",
  8001208:	462e      	mov	r6, r5
  800120a:	f107 0508 	add.w	r5, r7, #8
  800120e:	9603      	str	r6, [sp, #12]
@@ -1562,6 +1724,8 @@ Disassembly of section .text:
  800121a:	490f      	ldr	r1, [pc, #60]	; (8001258 <NEO6M_RMCCallBack+0x70>)
  800121c:	4628      	mov	r0, r5
  800121e:	f004 fde7 	bl	8005df0 <siprintf>
+
+	if(HAL_UART_Transmit(&huart2, (uint8_t *)buff, strlen(buff), HAL_MAX_DELAY) != HAL_OK)
  8001222:	f107 0308 	add.w	r3, r7, #8
  8001226:	4618      	mov	r0, r3
  8001228:	f7ff f82a 	bl	8000280 <strlen>
@@ -1574,10 +1738,16 @@ Disassembly of section .text:
  800123e:	4603      	mov	r3, r0
  8001240:	2b00      	cmp	r3, #0
  8001242:	d001      	beq.n	8001248 <NEO6M_RMCCallBack+0x60>
+	{
+		Error_Handler();
  8001244:	f000 f80e 	bl	8001264 <Error_Handler>
+	}
+
+	NEO6M_RemoveExpectedMessage(&neo6mh, RMC);
  8001248:	2105      	movs	r1, #5
  800124a:	4805      	ldr	r0, [pc, #20]	; (8001260 <NEO6M_RMCCallBack+0x78>)
  800124c:	f000 f86c 	bl	8001328 <NEO6M_RemoveExpectedMessage>
+}
  8001250:	bf00      	nop
  8001252:	3774      	adds	r7, #116	; 0x74
  8001254:	46bd      	mov	sp, r7
@@ -1587,25 +1757,54 @@ Disassembly of section .text:
  8001260:	2000027c 	.word	0x2000027c
 
 08001264 <Error_Handler>:
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
  8001264:	b480      	push	{r7}
  8001266:	af00      	add	r7, sp, #0
+  \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+           Can only be executed in Privileged modes.
+ */
+__STATIC_FORCEINLINE void __disable_irq(void)
+{
+  __ASM volatile ("cpsid i" : : : "memory");
  8001268:	b672      	cpsid	i
+}
  800126a:	bf00      	nop
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
  800126c:	e7fe      	b.n	800126c <Error_Handler+0x8>
 	...
 
 08001270 <NEO6M_AddExpectedMessage>:
+  * @param   *handler: Pointer to the handler structure.
+  * 		 MessagesTypes_t message_type: One of the supported message type, see @messages_types in .h file
+  * @retval  0 - if successfully, otherwise - 1
+  */
+uint8_t NEO6M_AddExpectedMessage(NEO6M_Handle_t *handle, MessagesTypes_t message_type)
+{
  8001270:	b580      	push	{r7, lr}
  8001272:	b084      	sub	sp, #16
  8001274:	af00      	add	r7, sp, #0
  8001276:	6078      	str	r0, [r7, #4]
  8001278:	460b      	mov	r3, r1
  800127a:	70fb      	strb	r3, [r7, #3]
+	uint8_t flag=1;
  800127c:	2301      	movs	r3, #1
  800127e:	73fb      	strb	r3, [r7, #15]
+
+	/* Search for empty space */
+	for(uint32_t i = 0; i < EXPECTED_MESSAGES_BUFF_SIZE; i++)
  8001280:	2300      	movs	r3, #0
  8001282:	60bb      	str	r3, [r7, #8]
  8001284:	e02a      	b.n	80012dc <NEO6M_AddExpectedMessage+0x6c>
+	{
+		if(handle->expectedMessages[i].callback == NULL)
  8001286:	6879      	ldr	r1, [r7, #4]
  8001288:	68ba      	ldr	r2, [r7, #8]
  800128a:	4613      	mov	r3, r2
@@ -1617,6 +1816,8 @@ Disassembly of section .text:
  8001296:	681b      	ldr	r3, [r3, #0]
  8001298:	2b00      	cmp	r3, #0
  800129a:	d11c      	bne.n	80012d6 <NEO6M_AddExpectedMessage+0x66>
+		{
+			handle->expectedMessages[i] = NMEA_STANDART_MESSAGGES[message_type];
  800129c:	78fa      	ldrb	r2, [r7, #3]
  800129e:	6878      	ldr	r0, [r7, #4]
  80012a0:	68b9      	ldr	r1, [r7, #8]
@@ -1634,31 +1835,45 @@ Disassembly of section .text:
  80012b8:	4603      	mov	r3, r0
  80012ba:	ca07      	ldmia	r2, {r0, r1, r2}
  80012bc:	e883 0007 	stmia.w	r3, {r0, r1, r2}
+			handle->expectedMessagesCount++;
  80012c0:	687b      	ldr	r3, [r7, #4]
  80012c2:	f893 3090 	ldrb.w	r3, [r3, #144]	; 0x90
  80012c6:	3301      	adds	r3, #1
  80012c8:	b2da      	uxtb	r2, r3
  80012ca:	687b      	ldr	r3, [r7, #4]
  80012cc:	f883 2090 	strb.w	r2, [r3, #144]	; 0x90
+			flag = 0;
  80012d0:	2300      	movs	r3, #0
  80012d2:	73fb      	strb	r3, [r7, #15]
+			break;
  80012d4:	e005      	b.n	80012e2 <NEO6M_AddExpectedMessage+0x72>
+	for(uint32_t i = 0; i < EXPECTED_MESSAGES_BUFF_SIZE; i++)
  80012d6:	68bb      	ldr	r3, [r7, #8]
  80012d8:	3301      	adds	r3, #1
  80012da:	60bb      	str	r3, [r7, #8]
  80012dc:	68bb      	ldr	r3, [r7, #8]
  80012de:	2b0b      	cmp	r3, #11
  80012e0:	d9d1      	bls.n	8001286 <NEO6M_AddExpectedMessage+0x16>
+		}
+	}
+
+	/* If MCU doesn't receive messages from module yet, starts receiving and updates status flag */
+	if(!flag)
  80012e2:	7bfb      	ldrb	r3, [r7, #15]
  80012e4:	2b00      	cmp	r3, #0
  80012e6:	d115      	bne.n	8001314 <NEO6M_AddExpectedMessage+0xa4>
+	{
+		if(handle->receive_status == NEO_FREE)
  80012e8:	687b      	ldr	r3, [r7, #4]
  80012ea:	f893 3091 	ldrb.w	r3, [r3, #145]	; 0x91
  80012ee:	2b00      	cmp	r3, #0
  80012f0:	d110      	bne.n	8001314 <NEO6M_AddExpectedMessage+0xa4>
+		{
+			handle->receive_status = NEO_WAITING;
  80012f2:	687b      	ldr	r3, [r7, #4]
  80012f4:	2201      	movs	r2, #1
  80012f6:	f883 2091 	strb.w	r2, [r3, #145]	; 0x91
+			if(HAL_UART_Receive_IT(GPS_UART, (uint8_t *)&handle->rcvdByte, 1) != HAL_OK)
  80012fa:	4b0a      	ldr	r3, [pc, #40]	; (8001324 <NEO6M_AddExpectedMessage+0xb4>)
  80012fc:	6818      	ldr	r0, [r3, #0]
  80012fe:	687b      	ldr	r3, [r7, #4]
@@ -1669,9 +1884,17 @@ Disassembly of section .text:
  800130a:	4603      	mov	r3, r0
  800130c:	2b00      	cmp	r3, #0
  800130e:	d001      	beq.n	8001314 <NEO6M_AddExpectedMessage+0xa4>
+			{
+				flag = 1;
  8001310:	2301      	movs	r3, #1
  8001312:	73fb      	strb	r3, [r7, #15]
+			}
+		}
+	}
+
+	return flag;
  8001314:	7bfb      	ldrb	r3, [r7, #15]
+}
  8001316:	4618      	mov	r0, r3
  8001318:	3710      	adds	r7, #16
  800131a:	46bd      	mov	sp, r7
@@ -1681,15 +1904,25 @@ Disassembly of section .text:
  8001324:	20000000 	.word	0x20000000
 
 08001328 <NEO6M_RemoveExpectedMessage>:
+  * @param   *handler: Pointer to the handler structure.
+  * 		 MessagesTypes_t message_type: One of the supported message type, see @messages_types in .h file
+  * @retval  0 - if successfully, otherwise - 1
+  */
+uint8_t NEO6M_RemoveExpectedMessage(NEO6M_Handle_t *handle, MessagesTypes_t message_type)
+{
  8001328:	b480      	push	{r7}
  800132a:	b085      	sub	sp, #20
  800132c:	af00      	add	r7, sp, #0
  800132e:	6078      	str	r0, [r7, #4]
  8001330:	460b      	mov	r3, r1
  8001332:	70fb      	strb	r3, [r7, #3]
+	/* Check which messages is expects, if this is type that must be removed - changes it to EMPTY */
+	for(uint32_t i = 0; i < EXPECTED_MESSAGES_BUFF_SIZE; i++)
  8001334:	2300      	movs	r3, #0
  8001336:	60fb      	str	r3, [r7, #12]
  8001338:	e02b      	b.n	8001392 <NEO6M_RemoveExpectedMessage+0x6a>
+	{
+		if(handle->expectedMessages[i].type == message_type)
  800133a:	6879      	ldr	r1, [r7, #4]
  800133c:	68fa      	ldr	r2, [r7, #12]
  800133e:	4613      	mov	r3, r2
@@ -1701,6 +1934,8 @@ Disassembly of section .text:
  800134a:	78fa      	ldrb	r2, [r7, #3]
  800134c:	429a      	cmp	r2, r3
  800134e:	d11d      	bne.n	800138c <NEO6M_RemoveExpectedMessage+0x64>
+		{
+			handle->expectedMessages[i] = NMEA_STANDART_MESSAGGES[EMPTY];
  8001350:	6879      	ldr	r1, [r7, #4]
  8001352:	68fa      	ldr	r2, [r7, #12]
  8001354:	4613      	mov	r3, r2
@@ -1711,28 +1946,42 @@ Disassembly of section .text:
  800135e:	4a12      	ldr	r2, [pc, #72]	; (80013a8 <NEO6M_RemoveExpectedMessage+0x80>)
  8001360:	ca07      	ldmia	r2, {r0, r1, r2}
  8001362:	e883 0007 	stmia.w	r3, {r0, r1, r2}
+			handle->expectedMessagesCount--;
  8001366:	687b      	ldr	r3, [r7, #4]
  8001368:	f893 3090 	ldrb.w	r3, [r3, #144]	; 0x90
  800136c:	3b01      	subs	r3, #1
  800136e:	b2da      	uxtb	r2, r3
  8001370:	687b      	ldr	r3, [r7, #4]
  8001372:	f883 2090 	strb.w	r2, [r3, #144]	; 0x90
+
+			//If no messages expects - finishes receiving
+			if(handle->expectedMessagesCount < 1)
  8001376:	687b      	ldr	r3, [r7, #4]
  8001378:	f893 3090 	ldrb.w	r3, [r3, #144]	; 0x90
  800137c:	2b00      	cmp	r3, #0
  800137e:	d103      	bne.n	8001388 <NEO6M_RemoveExpectedMessage+0x60>
+			{
+				handle->receive_status = NEO_FREE;
  8001380:	687b      	ldr	r3, [r7, #4]
  8001382:	2200      	movs	r2, #0
  8001384:	f883 2091 	strb.w	r2, [r3, #145]	; 0x91
+			}
+			return 0;
  8001388:	2300      	movs	r3, #0
  800138a:	e006      	b.n	800139a <NEO6M_RemoveExpectedMessage+0x72>
+	for(uint32_t i = 0; i < EXPECTED_MESSAGES_BUFF_SIZE; i++)
  800138c:	68fb      	ldr	r3, [r7, #12]
  800138e:	3301      	adds	r3, #1
  8001390:	60fb      	str	r3, [r7, #12]
  8001392:	68fb      	ldr	r3, [r7, #12]
  8001394:	2b0b      	cmp	r3, #11
  8001396:	d9d0      	bls.n	800133a <NEO6M_RemoveExpectedMessage+0x12>
+		}
+	}
+
+	return 1;
  8001398:	2301      	movs	r3, #1
+}
  800139a:	4618      	mov	r0, r3
  800139c:	3714      	adds	r7, #20
  800139e:	46bd      	mov	sp, r7
@@ -1742,12 +1991,22 @@ Disassembly of section .text:
  80013a8:	08008b44 	.word	0x08008b44
 
 080013ac <NEO6M_MessageHandler>:
+  * @note	 Ensure this is invoked within the appropriate UART callback for proper operation.
+  * @param   *handler: Pointer to the handler structure.
+  * @retval  None
+  */
+void NEO6M_MessageHandler(NEO6M_Handle_t *handler)
+{
  80013ac:	b580      	push	{r7, lr}
  80013ae:	b084      	sub	sp, #16
  80013b0:	af00      	add	r7, sp, #0
  80013b2:	6078      	str	r0, [r7, #4]
+	uint32_t checked_types=0;
  80013b4:	2300      	movs	r3, #0
  80013b6:	60fb      	str	r3, [r7, #12]
+
+	//Moves received byte to buffer
+	handler->rxBuff[handler->rxCounter++] = handler->rcvdByte;
  80013b8:	687b      	ldr	r3, [r7, #4]
  80013ba:	f8d3 30f8 	ldr.w	r3, [r3, #248]	; 0xf8
  80013be:	1c59      	adds	r1, r3, #1
@@ -1759,13 +2018,22 @@ Disassembly of section .text:
  80013ce:	4413      	add	r3, r2
  80013d0:	460a      	mov	r2, r1
  80013d2:	f883 2093 	strb.w	r2, [r3, #147]	; 0x93
+
+	//Checks for end sequence
+	if(handler->rcvdByte == '\n')
  80013d6:	687b      	ldr	r3, [r7, #4]
  80013d8:	f893 3092 	ldrb.w	r3, [r3, #146]	; 0x92
  80013dc:	2b0a      	cmp	r3, #10
  80013de:	d14b      	bne.n	8001478 <NEO6M_MessageHandler+0xcc>
+	{
+		//Iterates array with expects messages types
+		for(uint32_t i=0; i < EXPECTED_MESSAGES_BUFF_SIZE; i++)
  80013e0:	2300      	movs	r3, #0
  80013e2:	60bb      	str	r3, [r7, #8]
  80013e4:	e038      	b.n	8001458 <NEO6M_MessageHandler+0xac>
+		{
+			//Check for empty space in array
+			if(handler->expectedMessages[i].type != EMPTY)
  80013e6:	6879      	ldr	r1, [r7, #4]
  80013e8:	68ba      	ldr	r2, [r7, #8]
  80013ea:	4613      	mov	r3, r2
@@ -1776,6 +2044,9 @@ Disassembly of section .text:
  80013f4:	781b      	ldrb	r3, [r3, #0]
  80013f6:	2b00      	cmp	r3, #0
  80013f8:	d024      	beq.n	8001444 <NEO6M_MessageHandler+0x98>
+			{
+				//Compares received message type witch expected message type
+				if(!( strncmp(handler->rxBuff, handler->expectedMessages[i].formatter, 6) ))
  80013fa:	687b      	ldr	r3, [r7, #4]
  80013fc:	f103 0093 	add.w	r0, r3, #147	; 0x93
  8001400:	68ba      	ldr	r2, [r7, #8]
@@ -1792,6 +2063,9 @@ Disassembly of section .text:
  8001418:	4603      	mov	r3, r0
  800141a:	2b00      	cmp	r3, #0
  800141c:	d10f      	bne.n	800143e <NEO6M_MessageHandler+0x92>
+				{
+					//Calls appropriate message handler if this is expected message
+					NMEA_MESSAGGES_HANDLERS[handler->expectedMessages[i].type-1](handler, i);
  800141e:	6879      	ldr	r1, [r7, #4]
  8001420:	68ba      	ldr	r2, [r7, #8]
  8001422:	4613      	mov	r3, r2
@@ -1806,16 +2080,23 @@ Disassembly of section .text:
  8001436:	68b9      	ldr	r1, [r7, #8]
  8001438:	6878      	ldr	r0, [r7, #4]
  800143a:	4798      	blx	r3
+					break;
  800143c:	e011      	b.n	8001462 <NEO6M_MessageHandler+0xb6>
+				}
+				checked_types++;
  800143e:	68fb      	ldr	r3, [r7, #12]
  8001440:	3301      	adds	r3, #1
  8001442:	60fb      	str	r3, [r7, #12]
+			}
+			//If count of checked messages types is equal to count of all messages types that expects, then finishes iteration
+			if(checked_types >= handler->expectedMessagesCount)
  8001444:	687b      	ldr	r3, [r7, #4]
  8001446:	f893 3090 	ldrb.w	r3, [r3, #144]	; 0x90
  800144a:	461a      	mov	r2, r3
  800144c:	68fb      	ldr	r3, [r7, #12]
  800144e:	4293      	cmp	r3, r2
  8001450:	d206      	bcs.n	8001460 <NEO6M_MessageHandler+0xb4>
+		for(uint32_t i=0; i < EXPECTED_MESSAGES_BUFF_SIZE; i++)
  8001452:	68bb      	ldr	r3, [r7, #8]
  8001454:	3301      	adds	r3, #1
  8001456:	60bb      	str	r3, [r7, #8]
@@ -1823,16 +2104,27 @@ Disassembly of section .text:
  800145a:	2b0b      	cmp	r3, #11
  800145c:	d9c3      	bls.n	80013e6 <NEO6M_MessageHandler+0x3a>
  800145e:	e000      	b.n	8001462 <NEO6M_MessageHandler+0xb6>
+			{
+				break;
  8001460:	bf00      	nop
+			}
+		}
+
+		//Resets the rx buffer
+		memset(handler->rxBuff, 0, RX_BUFFER_SIZE);
  8001462:	687b      	ldr	r3, [r7, #4]
  8001464:	3393      	adds	r3, #147	; 0x93
  8001466:	2264      	movs	r2, #100	; 0x64
  8001468:	2100      	movs	r1, #0
  800146a:	4618      	mov	r0, r3
  800146c:	f004 fd23 	bl	8005eb6 <memset>
+		handler->rxCounter = 0;
  8001470:	687b      	ldr	r3, [r7, #4]
  8001472:	2200      	movs	r2, #0
  8001474:	f8c3 20f8 	str.w	r2, [r3, #248]	; 0xf8
+	}
+
+	HAL_UART_Receive_IT(GPS_UART, (uint8_t *)&handler->rcvdByte, 1);
  8001478:	4b06      	ldr	r3, [pc, #24]	; (8001494 <NEO6M_MessageHandler+0xe8>)
  800147a:	6818      	ldr	r0, [r3, #0]
  800147c:	687b      	ldr	r3, [r7, #4]
@@ -1840,6 +2132,7 @@ Disassembly of section .text:
  8001480:	2201      	movs	r2, #1
  8001482:	4619      	mov	r1, r3
  8001484:	f001 ff35 	bl	80032f2 <HAL_UART_Receive_IT>
+}
  8001488:	bf00      	nop
  800148a:	3710      	adds	r7, #16
  800148c:	46bd      	mov	sp, r7
@@ -1848,16 +2141,25 @@ Disassembly of section .text:
  8001494:	20000000 	.word	0x20000000
 
 08001498 <gga_handle>:
+  * @param   *handler: Pointer to the handler structure.
+  * @param   *message_num: Index of the message
+  * @retval  None
+  */
+static void gga_handle(NEO6M_Handle_t *handle, uint32_t message_num)
+{
  8001498:	b580      	push	{r7, lr}
  800149a:	b0a0      	sub	sp, #128	; 0x80
  800149c:	af0e      	add	r7, sp, #56	; 0x38
  800149e:	6078      	str	r0, [r7, #4]
  80014a0:	6039      	str	r1, [r7, #0]
+	GGA_Package_t package={0};
  80014a2:	f107 0308 	add.w	r3, r7, #8
  80014a6:	2240      	movs	r2, #64	; 0x40
  80014a8:	2100      	movs	r1, #0
  80014aa:	4618      	mov	r0, r3
  80014ac:	f004 fd03 	bl	8005eb6 <memset>
+
+	nmea_parser(handle->rxBuff, "3dcdc88ffcfc88",
  80014b0:	687b      	ldr	r3, [r7, #4]
  80014b2:	f103 0093 	add.w	r0, r3, #147	; 0x93
  80014b6:	f107 0308 	add.w	r3, r7, #8
@@ -1905,6 +2207,12 @@ Disassembly of section .text:
  800152a:	460b      	mov	r3, r1
  800152c:	491a      	ldr	r1, [pc, #104]	; (8001598 <gga_handle+0x100>)
  800152e:	f000 faf3 	bl	8001b18 <nmea_parser>
+				&package.uSep,
+				&package.diffAge,
+				&package.diffStation,
+				&package.cs);
+
+	package.latitude = nmea_to_dec(package.latitude, package.ns);
  8001532:	ed97 7b04 	vldr	d7, [r7, #16]
  8001536:	7e3b      	ldrb	r3, [r7, #24]
  8001538:	4618      	mov	r0, r3
@@ -1914,6 +2222,7 @@ Disassembly of section .text:
  8001546:	eeb0 7a40 	vmov.f32	s14, s0
  800154a:	eef0 7a60 	vmov.f32	s15, s1
  800154e:	ed87 7b04 	vstr	d7, [r7, #16]
+	package.longitude = nmea_to_dec(package.longitude, package.ew);
  8001552:	ed97 7b08 	vldr	d7, [r7, #32]
  8001556:	f897 3028 	ldrb.w	r3, [r7, #40]	; 0x28
  800155a:	4618      	mov	r0, r3
@@ -1923,6 +2232,8 @@ Disassembly of section .text:
  8001568:	eeb0 7a40 	vmov.f32	s14, s0
  800156c:	eef0 7a60 	vmov.f32	s15, s1
  8001570:	ed87 7b08 	vstr	d7, [r7, #32]
+
+	handle->expectedMessages[message_num].callback(&package);
  8001574:	6879      	ldr	r1, [r7, #4]
  8001576:	683a      	ldr	r2, [r7, #0]
  8001578:	4613      	mov	r3, r2
@@ -1935,6 +2246,7 @@ Disassembly of section .text:
  8001586:	f107 0208 	add.w	r2, r7, #8
  800158a:	4610      	mov	r0, r2
  800158c:	4798      	blx	r3
+}
  800158e:	bf00      	nop
  8001590:	3748      	adds	r7, #72	; 0x48
  8001592:	46bd      	mov	sp, r7
@@ -1943,16 +2255,25 @@ Disassembly of section .text:
  8001598:	08008ae4 	.word	0x08008ae4
 
 0800159c <gll_handle>:
+  * @brief   This function parse particular message and calls appropriate callback
+  * @param   *handler: Pointer to the handler structure.
+  * @retval  None
+  */
+static void gll_handle(NEO6M_Handle_t *handle, uint32_t message_num)
+{
  800159c:	b580      	push	{r7, lr}
  800159e:	b092      	sub	sp, #72	; 0x48
  80015a0:	af06      	add	r7, sp, #24
  80015a2:	6078      	str	r0, [r7, #4]
  80015a4:	6039      	str	r1, [r7, #0]
+	GLL_Package_t package={0};
  80015a6:	f107 0308 	add.w	r3, r7, #8
  80015aa:	2228      	movs	r2, #40	; 0x28
  80015ac:	2100      	movs	r1, #0
  80015ae:	4618      	mov	r0, r3
  80015b0:	f004 fc81 	bl	8005eb6 <memset>
+
+	nmea_parser(handle->rxBuff, "dcdc3cc",
  80015b4:	687b      	ldr	r3, [r7, #4]
  80015b6:	f103 0093 	add.w	r0, r3, #147	; 0x93
  80015ba:	f107 0308 	add.w	r3, r7, #8
@@ -1979,6 +2300,12 @@ Disassembly of section .text:
  80015f6:	460b      	mov	r3, r1
  80015f8:	491a      	ldr	r1, [pc, #104]	; (8001664 <gll_handle+0xc8>)
  80015fa:	f000 fa8d 	bl	8001b18 <nmea_parser>
+			&package.time,
+			&package.valid,
+			&package.mode,
+			&package.cs);
+
+	package.latitude = nmea_to_dec(package.latitude, package.ns);
  80015fe:	ed97 7b02 	vldr	d7, [r7, #8]
  8001602:	7c3b      	ldrb	r3, [r7, #16]
  8001604:	4618      	mov	r0, r3
@@ -1988,6 +2315,7 @@ Disassembly of section .text:
  8001612:	eeb0 7a40 	vmov.f32	s14, s0
  8001616:	eef0 7a60 	vmov.f32	s15, s1
  800161a:	ed87 7b02 	vstr	d7, [r7, #8]
+	package.longitude = nmea_to_dec(package.longitude, package.ew);
  800161e:	ed97 7b06 	vldr	d7, [r7, #24]
  8001622:	f897 3020 	ldrb.w	r3, [r7, #32]
  8001626:	4618      	mov	r0, r3
@@ -1997,6 +2325,8 @@ Disassembly of section .text:
  8001634:	eeb0 7a40 	vmov.f32	s14, s0
  8001638:	eef0 7a60 	vmov.f32	s15, s1
  800163c:	ed87 7b06 	vstr	d7, [r7, #24]
+
+	handle->expectedMessages[message_num].callback(&package);
  8001640:	6879      	ldr	r1, [r7, #4]
  8001642:	683a      	ldr	r2, [r7, #0]
  8001644:	4613      	mov	r3, r2
@@ -2009,6 +2339,7 @@ Disassembly of section .text:
  8001652:	f107 0208 	add.w	r2, r7, #8
  8001656:	4610      	mov	r0, r2
  8001658:	4798      	blx	r3
+}
  800165a:	bf00      	nop
  800165c:	3730      	adds	r7, #48	; 0x30
  800165e:	46bd      	mov	sp, r7
@@ -2017,16 +2348,25 @@ Disassembly of section .text:
  8001664:	08008af4 	.word	0x08008af4
 
 08001668 <gsa_handle>:
+  * @brief   This function parse particular message and calls appropriate callback
+  * @param   *handler: Pointer to the handler structure.
+  * @retval  None
+  */
+static void gsa_handle(NEO6M_Handle_t *handle, uint32_t message_num)
+{
  8001668:	b580      	push	{r7, lr}
  800166a:	b09a      	sub	sp, #104	; 0x68
  800166c:	af10      	add	r7, sp, #64	; 0x40
  800166e:	6078      	str	r0, [r7, #4]
  8001670:	6039      	str	r1, [r7, #0]
+	GSA_Package_t package={0};
  8001672:	f107 0308 	add.w	r3, r7, #8
  8001676:	2220      	movs	r2, #32
  8001678:	2100      	movs	r1, #0
  800167a:	4618      	mov	r0, r3
  800167c:	f004 fc1b 	bl	8005eb6 <memset>
+
+	nmea_parser(handle->rxBuff, "c8888888888888fff",
  8001680:	687b      	ldr	r3, [r7, #4]
  8001682:	f103 0093 	add.w	r0, r3, #147	; 0x93
  8001686:	f107 0308 	add.w	r3, r7, #8
@@ -2083,6 +2423,12 @@ Disassembly of section .text:
  8001710:	460b      	mov	r3, r1
  8001712:	490a      	ldr	r1, [pc, #40]	; (800173c <gsa_handle+0xd4>)
  8001714:	f000 fa00 	bl	8001b18 <nmea_parser>
+				&package.pdop,
+				&package.hdop,
+				&package.vdop,
+				&package.cs);
+
+	handle->expectedMessages[message_num].callback(&package);
  8001718:	6879      	ldr	r1, [r7, #4]
  800171a:	683a      	ldr	r2, [r7, #0]
  800171c:	4613      	mov	r3, r2
@@ -2095,6 +2441,7 @@ Disassembly of section .text:
  800172a:	f107 0208 	add.w	r2, r7, #8
  800172e:	4610      	mov	r0, r2
  8001730:	4798      	blx	r3
+}
  8001732:	bf00      	nop
  8001734:	3728      	adds	r7, #40	; 0x28
  8001736:	46bd      	mov	sp, r7
@@ -2103,16 +2450,29 @@ Disassembly of section .text:
  800173c:	08008afc 	.word	0x08008afc
 
 08001740 <gsv_handle>:
+  * @brief   This function store GSV packets, until all packets will be received, then parses this packets
+  * @param   *handler: Pointer to the handler structure.
+  * @retval  None
+  */
+static void gsv_handle(NEO6M_Handle_t *handle, uint32_t message_num)
+{
  8001740:	b580      	push	{r7, lr}
  8001742:	b0a0      	sub	sp, #128	; 0x80
  8001744:	af12      	add	r7, sp, #72	; 0x48
  8001746:	6078      	str	r0, [r7, #4]
  8001748:	6039      	str	r1, [r7, #0]
+	static char gsv_buff[300]={0};
+	static size_t gsv_count=0, gsv_buff_len=0;
+	GSV_Package_t package={0};
  800174a:	f107 0310 	add.w	r3, r7, #16
  800174e:	221e      	movs	r2, #30
  8001750:	2100      	movs	r1, #0
  8001752:	4618      	mov	r0, r3
  8001754:	f004 fbaf 	bl	8005eb6 <memset>
+	char *ptr, *saveptr;
+
+	//Waits for all packets that must be receive
+	if(gsv_count < gsv_get_noMsg(handle->rxBuff))
  8001758:	687b      	ldr	r3, [r7, #4]
  800175a:	3393      	adds	r3, #147	; 0x93
  800175c:	4618      	mov	r0, r3
@@ -2123,6 +2483,8 @@ Disassembly of section .text:
  8001768:	681b      	ldr	r3, [r3, #0]
  800176a:	429a      	cmp	r2, r3
  800176c:	d91a      	bls.n	80017a4 <gsv_handle+0x64>
+	{
+		strcpy(&gsv_buff[gsv_buff_len], handle->rxBuff);
  800176e:	4b56      	ldr	r3, [pc, #344]	; (80018c8 <gsv_handle+0x188>)
  8001770:	681b      	ldr	r3, [r3, #0]
  8001772:	4a56      	ldr	r2, [pc, #344]	; (80018cc <gsv_handle+0x18c>)
@@ -2132,11 +2494,13 @@ Disassembly of section .text:
  800177a:	4619      	mov	r1, r3
  800177c:	4610      	mov	r0, r2
  800177e:	f004 fc64 	bl	800604a <strcpy>
+		gsv_count++;
  8001782:	4b50      	ldr	r3, [pc, #320]	; (80018c4 <gsv_handle+0x184>)
  8001784:	681b      	ldr	r3, [r3, #0]
  8001786:	3301      	adds	r3, #1
  8001788:	4a4e      	ldr	r2, [pc, #312]	; (80018c4 <gsv_handle+0x184>)
  800178a:	6013      	str	r3, [r2, #0]
+		gsv_buff_len += strlen(handle->rxBuff);
  800178c:	687b      	ldr	r3, [r7, #4]
  800178e:	3393      	adds	r3, #147	; 0x93
  8001790:	4618      	mov	r0, r3
@@ -2148,15 +2512,23 @@ Disassembly of section .text:
  800179e:	4a4a      	ldr	r2, [pc, #296]	; (80018c8 <gsv_handle+0x188>)
  80017a0:	6013      	str	r3, [r2, #0]
  80017a2:	e08c      	b.n	80018be <gsv_handle+0x17e>
+		return;
+	}
+
+	//If all packets was received, starts parse this packet one by one, and calls appropriate callback
+	ptr = strtok_r(gsv_buff, "\n", &saveptr);
  80017a4:	f107 030c 	add.w	r3, r7, #12
  80017a8:	461a      	mov	r2, r3
  80017aa:	4949      	ldr	r1, [pc, #292]	; (80018d0 <gsv_handle+0x190>)
  80017ac:	4847      	ldr	r0, [pc, #284]	; (80018cc <gsv_handle+0x18c>)
  80017ae:	f004 fbd1 	bl	8005f54 <strtok_r>
  80017b2:	6378      	str	r0, [r7, #52]	; 0x34
+	for(uint32_t i=0; i < gsv_count; i++)
  80017b4:	2300      	movs	r3, #0
  80017b6:	633b      	str	r3, [r7, #48]	; 0x30
  80017b8:	e070      	b.n	800189c <gsv_handle+0x15c>
+	{
+		nmea_parser(ptr, "8888818881888188818",
  80017ba:	f107 0310 	add.w	r3, r7, #16
  80017be:	1c59      	adds	r1, r3, #1
  80017c0:	f107 0210 	add.w	r2, r7, #16
@@ -2218,6 +2590,12 @@ Disassembly of section .text:
  8001856:	491f      	ldr	r1, [pc, #124]	; (80018d4 <gsv_handle+0x194>)
  8001858:	6b78      	ldr	r0, [r7, #52]	; 0x34
  800185a:	f000 f95d 	bl	8001b18 <nmea_parser>
+					&package.repeated_block[3].elv,
+					&package.repeated_block[3].az,
+					&package.repeated_block[3].cno,
+					&package.cs);
+
+		handle->expectedMessages[message_num].callback(&package);
  800185e:	6879      	ldr	r1, [r7, #4]
  8001860:	683a      	ldr	r2, [r7, #0]
  8001862:	4613      	mov	r3, r2
@@ -2230,17 +2608,21 @@ Disassembly of section .text:
  8001870:	f107 0210 	add.w	r2, r7, #16
  8001874:	4610      	mov	r0, r2
  8001876:	4798      	blx	r3
+
+		memset(&package, 0, sizeof(package));
  8001878:	f107 0310 	add.w	r3, r7, #16
  800187c:	221e      	movs	r2, #30
  800187e:	2100      	movs	r1, #0
  8001880:	4618      	mov	r0, r3
  8001882:	f004 fb18 	bl	8005eb6 <memset>
+		ptr = strtok_r(NULL, "\n", &saveptr);
  8001886:	f107 030c 	add.w	r3, r7, #12
  800188a:	461a      	mov	r2, r3
  800188c:	4910      	ldr	r1, [pc, #64]	; (80018d0 <gsv_handle+0x190>)
  800188e:	2000      	movs	r0, #0
  8001890:	f004 fb60 	bl	8005f54 <strtok_r>
  8001894:	6378      	str	r0, [r7, #52]	; 0x34
+	for(uint32_t i=0; i < gsv_count; i++)
  8001896:	6b3b      	ldr	r3, [r7, #48]	; 0x30
  8001898:	3301      	adds	r3, #1
  800189a:	633b      	str	r3, [r7, #48]	; 0x30
@@ -2249,16 +2631,22 @@ Disassembly of section .text:
  80018a0:	6b3a      	ldr	r2, [r7, #48]	; 0x30
  80018a2:	429a      	cmp	r2, r3
  80018a4:	d389      	bcc.n	80017ba <gsv_handle+0x7a>
+	}
+
+	gsv_count = 0;
  80018a6:	4b07      	ldr	r3, [pc, #28]	; (80018c4 <gsv_handle+0x184>)
  80018a8:	2200      	movs	r2, #0
  80018aa:	601a      	str	r2, [r3, #0]
+	gsv_buff_len = 0;
  80018ac:	4b06      	ldr	r3, [pc, #24]	; (80018c8 <gsv_handle+0x188>)
  80018ae:	2200      	movs	r2, #0
  80018b0:	601a      	str	r2, [r3, #0]
+	memset(gsv_buff, 0, 300);
  80018b2:	f44f 7296 	mov.w	r2, #300	; 0x12c
  80018b6:	2100      	movs	r1, #0
  80018b8:	4804      	ldr	r0, [pc, #16]	; (80018cc <gsv_handle+0x18c>)
  80018ba:	f004 fafc 	bl	8005eb6 <memset>
+}
  80018be:	3738      	adds	r7, #56	; 0x38
  80018c0:	46bd      	mov	sp, r7
  80018c2:	bd80      	pop	{r7, pc}
@@ -2269,16 +2657,25 @@ Disassembly of section .text:
  80018d4:	08008b14 	.word	0x08008b14
 
 080018d8 <rmc_handle>:
+  * @brief   This function parse particular message and calls appropriate callback
+  * @param   *handler: Pointer to the handler structure.
+  * @retval  None
+  */
+static void rmc_handle(NEO6M_Handle_t *handle, uint32_t message_num)
+{
  80018d8:	b580      	push	{r7, lr}
  80018da:	b09c      	sub	sp, #112	; 0x70
  80018dc:	af0c      	add	r7, sp, #48	; 0x30
  80018de:	6078      	str	r0, [r7, #4]
  80018e0:	6039      	str	r1, [r7, #0]
+	RMC_Package_t package={0};
  80018e2:	f107 0308 	add.w	r3, r7, #8
  80018e6:	2238      	movs	r2, #56	; 0x38
  80018e8:	2100      	movs	r1, #0
  80018ea:	4618      	mov	r0, r3
  80018ec:	f004 fae3 	bl	8005eb6 <memset>
+
+	nmea_parser(handle->rxBuff, "3cdcdcff3fcc",
  80018f0:	687b      	ldr	r3, [r7, #4]
  80018f2:	f103 0093 	add.w	r0, r3, #147	; 0x93
  80018f6:	f107 0308 	add.w	r3, r7, #8
@@ -2320,6 +2717,12 @@ Disassembly of section .text:
  8001958:	460b      	mov	r3, r1
  800195a:	491a      	ldr	r1, [pc, #104]	; (80019c4 <rmc_handle+0xec>)
  800195c:	f000 f8dc 	bl	8001b18 <nmea_parser>
+				&package.mv,
+				&package.mvE,
+				&package.mode,
+				&package.cs);
+
+	package.latitude = nmea_to_dec(package.latitude, package.ns);
  8001960:	ed97 7b04 	vldr	d7, [r7, #16]
  8001964:	7e3b      	ldrb	r3, [r7, #24]
  8001966:	4618      	mov	r0, r3
@@ -2329,6 +2732,7 @@ Disassembly of section .text:
  8001974:	eeb0 7a40 	vmov.f32	s14, s0
  8001978:	eef0 7a60 	vmov.f32	s15, s1
  800197c:	ed87 7b04 	vstr	d7, [r7, #16]
+	package.longitude = nmea_to_dec(package.longitude, package.ew);
  8001980:	ed97 7b08 	vldr	d7, [r7, #32]
  8001984:	f897 3028 	ldrb.w	r3, [r7, #40]	; 0x28
  8001988:	4618      	mov	r0, r3
@@ -2338,6 +2742,8 @@ Disassembly of section .text:
  8001996:	eeb0 7a40 	vmov.f32	s14, s0
  800199a:	eef0 7a60 	vmov.f32	s15, s1
  800199e:	ed87 7b08 	vstr	d7, [r7, #32]
+
+	handle->expectedMessages[message_num].callback(&package);
  80019a2:	6879      	ldr	r1, [r7, #4]
  80019a4:	683a      	ldr	r2, [r7, #0]
  80019a6:	4613      	mov	r3, r2
@@ -2350,6 +2756,7 @@ Disassembly of section .text:
  80019b4:	f107 0208 	add.w	r2, r7, #8
  80019b8:	4610      	mov	r0, r2
  80019ba:	4798      	blx	r3
+}
  80019bc:	bf00      	nop
  80019be:	3740      	adds	r7, #64	; 0x40
  80019c0:	46bd      	mov	sp, r7
@@ -2357,11 +2764,18 @@ Disassembly of section .text:
  80019c4:	08008b28 	.word	0x08008b28
 
 080019c8 <vtg_handle>:
+  * @brief   This function parse particular message and calls appropriate callback
+  * @param   *handler: Pointer to the handler structure.
+  * @retval  None
+  */
+static void vtg_handle(NEO6M_Handle_t *handle, uint32_t message_num)
+{
  80019c8:	b580      	push	{r7, lr}
  80019ca:	b090      	sub	sp, #64	; 0x40
  80019cc:	af08      	add	r7, sp, #32
  80019ce:	6078      	str	r0, [r7, #4]
  80019d0:	6039      	str	r1, [r7, #0]
+	VTG_Package_t package={0};
  80019d2:	f107 0308 	add.w	r3, r7, #8
  80019d6:	2200      	movs	r2, #0
  80019d8:	601a      	str	r2, [r3, #0]
@@ -2370,6 +2784,8 @@ Disassembly of section .text:
  80019de:	60da      	str	r2, [r3, #12]
  80019e0:	611a      	str	r2, [r3, #16]
  80019e2:	615a      	str	r2, [r3, #20]
+
+	nmea_parser(handle->rxBuff, "fc8cfcfcc",
  80019e4:	687b      	ldr	r3, [r7, #4]
  80019e6:	f103 0093 	add.w	r0, r3, #147	; 0x93
  80019ea:	f107 0308 	add.w	r3, r7, #8
@@ -2402,6 +2818,12 @@ Disassembly of section .text:
  8001a34:	460b      	mov	r3, r1
  8001a36:	490a      	ldr	r1, [pc, #40]	; (8001a60 <vtg_handle+0x98>)
  8001a38:	f000 f86e 	bl	8001b18 <nmea_parser>
+			&package.kph,
+			&package.kilometers,
+			&package.mode,
+			&package.cs);
+
+	handle->expectedMessages[message_num].callback(&package);
  8001a3c:	6879      	ldr	r1, [r7, #4]
  8001a3e:	683a      	ldr	r2, [r7, #0]
  8001a40:	4613      	mov	r3, r2
@@ -2414,6 +2836,7 @@ Disassembly of section .text:
  8001a4e:	f107 0208 	add.w	r2, r7, #8
  8001a52:	4610      	mov	r0, r2
  8001a54:	4798      	blx	r3
+}
  8001a56:	bf00      	nop
  8001a58:	3720      	adds	r7, #32
  8001a5a:	46bd      	mov	sp, r7
@@ -2422,12 +2845,19 @@ Disassembly of section .text:
  8001a60:	08008b38 	.word	0x08008b38
 
 08001a64 <nmea_to_dec>:
+  * @param   deg_coord: Coordinate that must be comverted
+  * @param   nsew: N/S or E/W indicator
+  * @retval  decimal format of coordinate
+  */
+static double nmea_to_dec(double deg_coord, char nsew)
+{
  8001a64:	b5b0      	push	{r4, r5, r7, lr}
  8001a66:	b08c      	sub	sp, #48	; 0x30
  8001a68:	af00      	add	r7, sp, #0
  8001a6a:	ed87 0b02 	vstr	d0, [r7, #8]
  8001a6e:	4603      	mov	r3, r0
  8001a70:	71fb      	strb	r3, [r7, #7]
+    int degree = (int)(deg_coord/100);
  8001a72:	f04f 0200 	mov.w	r2, #0
  8001a76:	4b26      	ldr	r3, [pc, #152]	; (8001b10 <nmea_to_dec+0xac>)
  8001a78:	e9d7 0102 	ldrd	r0, r1, [r7, #8]
@@ -2439,6 +2869,7 @@ Disassembly of section .text:
  8001a88:	f7ff f86e 	bl	8000b68 <__aeabi_d2iz>
  8001a8c:	4603      	mov	r3, r0
  8001a8e:	627b      	str	r3, [r7, #36]	; 0x24
+    double minutes = deg_coord - degree*100;
  8001a90:	6a7b      	ldr	r3, [r7, #36]	; 0x24
  8001a92:	2264      	movs	r2, #100	; 0x64
  8001a94:	fb02 f303 	mul.w	r3, r2, r3
@@ -2451,6 +2882,7 @@ Disassembly of section .text:
  8001aaa:	4602      	mov	r2, r0
  8001aac:	460b      	mov	r3, r1
  8001aae:	e9c7 2306 	strd	r2, r3, [r7, #24]
+    double dec_deg = minutes / 60;
  8001ab2:	f04f 0200 	mov.w	r2, #0
  8001ab6:	4b17      	ldr	r3, [pc, #92]	; (8001b14 <nmea_to_dec+0xb0>)
  8001ab8:	e9d7 0106 	ldrd	r0, r1, [r7, #24]
@@ -2458,6 +2890,7 @@ Disassembly of section .text:
  8001ac0:	4602      	mov	r2, r0
  8001ac2:	460b      	mov	r3, r1
  8001ac4:	e9c7 2304 	strd	r2, r3, [r7, #16]
+    double decimal = degree + dec_deg;
  8001ac8:	6a78      	ldr	r0, [r7, #36]	; 0x24
  8001aca:	f7fe fd33 	bl	8000534 <__aeabi_i2d>
  8001ace:	4602      	mov	r2, r0
@@ -2467,18 +2900,25 @@ Disassembly of section .text:
  8001ada:	4602      	mov	r2, r0
  8001adc:	460b      	mov	r3, r1
  8001ade:	e9c7 230a 	strd	r2, r3, [r7, #40]	; 0x28
+
+    if (nsew == 'S' || nsew == 'W')
  8001ae2:	79fb      	ldrb	r3, [r7, #7]
  8001ae4:	2b53      	cmp	r3, #83	; 0x53
  8001ae6:	d002      	beq.n	8001aee <nmea_to_dec+0x8a>
  8001ae8:	79fb      	ldrb	r3, [r7, #7]
  8001aea:	2b57      	cmp	r3, #87	; 0x57
  8001aec:	d105      	bne.n	8001afa <nmea_to_dec+0x96>
+    {
+        decimal *= -1;
  8001aee:	6abc      	ldr	r4, [r7, #40]	; 0x28
  8001af0:	6afb      	ldr	r3, [r7, #44]	; 0x2c
  8001af2:	f083 4500 	eor.w	r5, r3, #2147483648	; 0x80000000
  8001af6:	e9c7 450a 	strd	r4, r5, [r7, #40]	; 0x28
+    }
+    return decimal;
  8001afa:	e9d7 230a 	ldrd	r2, r3, [r7, #40]	; 0x28
  8001afe:	ec43 2b17 	vmov	d7, r2, r3
+}
  8001b02:	eeb0 0a47 	vmov.f32	s0, s14
  8001b06:	eef0 0a67 	vmov.f32	s1, s15
  8001b0a:	3730      	adds	r7, #48	; 0x30
@@ -2488,18 +2928,32 @@ Disassembly of section .text:
  8001b14:	404e0000 	.word	0x404e0000
 
 08001b18 <nmea_parser>:
+  * c - char, 8 - uint8_t, d - double, 1 - uint16_t, 3 - uint32_t)
+  * @param   args: pointers to appropriate structure arguments
+  * @retval  None
+  */
+static void nmea_parser(char *package, char *formats, ...)
+{
  8001b18:	b40e      	push	{r1, r2, r3}
  8001b1a:	b590      	push	{r4, r7, lr}
  8001b1c:	b086      	sub	sp, #24
  8001b1e:	af00      	add	r7, sp, #0
  8001b20:	6078      	str	r0, [r7, #4]
+	va_list args;
+	char *ptr = package;
  8001b22:	687b      	ldr	r3, [r7, #4]
  8001b24:	617b      	str	r3, [r7, #20]
+
+	va_start(args, formats);
  8001b26:	f107 0328 	add.w	r3, r7, #40	; 0x28
  8001b2a:	60fb      	str	r3, [r7, #12]
+
+	for(uint32_t i=0; i < strlen(formats); i++)
  8001b2c:	2300      	movs	r3, #0
  8001b2e:	613b      	str	r3, [r7, #16]
  8001b30:	e0a2      	b.n	8001c78 <nmea_parser+0x160>
+	{
+		switch(formats[i])
  8001b32:	6a7a      	ldr	r2, [r7, #36]	; 0x24
  8001b34:	693b      	ldr	r3, [r7, #16]
  8001b36:	4413      	add	r3, r2
@@ -2525,10 +2979,15 @@ Disassembly of section .text:
  8001b66:	2b33      	cmp	r3, #51	; 0x33
  8001b68:	d068      	beq.n	8001c3c <nmea_parser+0x124>
  8001b6a:	e07c      	b.n	8001c66 <nmea_parser+0x14e>
+		{
+			case 'f':
+			{
+				ptr = strchr(ptr, ',');
  8001b6c:	212c      	movs	r1, #44	; 0x2c
  8001b6e:	6978      	ldr	r0, [r7, #20]
  8001b70:	f004 f9a9 	bl	8005ec6 <strchr>
  8001b74:	6178      	str	r0, [r7, #20]
+				*va_arg(args, float *) = strtod(++ptr, NULL);
  8001b76:	697b      	ldr	r3, [r7, #20]
  8001b78:	3301      	adds	r3, #1
  8001b7a:	617b      	str	r3, [r7, #20]
@@ -2543,11 +3002,17 @@ Disassembly of section .text:
  8001b90:	f7ff f832 	bl	8000bf8 <__aeabi_d2f>
  8001b94:	4603      	mov	r3, r0
  8001b96:	6023      	str	r3, [r4, #0]
+				break;
  8001b98:	e06b      	b.n	8001c72 <nmea_parser+0x15a>
+			}
+			case 'c':
+			{
+				ptr = strchr(ptr, ',');
  8001b9a:	212c      	movs	r1, #44	; 0x2c
  8001b9c:	6978      	ldr	r0, [r7, #20]
  8001b9e:	f004 f992 	bl	8005ec6 <strchr>
  8001ba2:	6178      	str	r0, [r7, #20]
+				*va_arg(args, char *) = *++ptr;
  8001ba4:	697b      	ldr	r3, [r7, #20]
  8001ba6:	3301      	adds	r3, #1
  8001ba8:	617b      	str	r3, [r7, #20]
@@ -2558,11 +3023,17 @@ Disassembly of section .text:
  8001bb2:	697a      	ldr	r2, [r7, #20]
  8001bb4:	7812      	ldrb	r2, [r2, #0]
  8001bb6:	701a      	strb	r2, [r3, #0]
+				break;
  8001bb8:	e05b      	b.n	8001c72 <nmea_parser+0x15a>
+			}
+			case '8':
+			{
+				ptr = strchr(ptr, ',');
  8001bba:	212c      	movs	r1, #44	; 0x2c
  8001bbc:	6978      	ldr	r0, [r7, #20]
  8001bbe:	f004 f982 	bl	8005ec6 <strchr>
  8001bc2:	6178      	str	r0, [r7, #20]
+				*va_arg(args, uint8_t *) = strtol(++ptr, NULL, 10);
  8001bc4:	697b      	ldr	r3, [r7, #20]
  8001bc6:	3301      	adds	r3, #1
  8001bc8:	617b      	str	r3, [r7, #20]
@@ -2577,11 +3048,17 @@ Disassembly of section .text:
  8001bdc:	681b      	ldr	r3, [r3, #0]
  8001bde:	b2ca      	uxtb	r2, r1
  8001be0:	701a      	strb	r2, [r3, #0]
+				break;
  8001be2:	e046      	b.n	8001c72 <nmea_parser+0x15a>
+			}
+			case 'd':
+			{
+				ptr = strchr(ptr, ',');
  8001be4:	212c      	movs	r1, #44	; 0x2c
  8001be6:	6978      	ldr	r0, [r7, #20]
  8001be8:	f004 f96d 	bl	8005ec6 <strchr>
  8001bec:	6178      	str	r0, [r7, #20]
+				*va_arg(args, double *) = strtod(++ptr, NULL);
  8001bee:	697b      	ldr	r3, [r7, #20]
  8001bf0:	3301      	adds	r3, #1
  8001bf2:	617b      	str	r3, [r7, #20]
@@ -2595,11 +3072,17 @@ Disassembly of section .text:
  8001c04:	eeb0 7a40 	vmov.f32	s14, s0
  8001c08:	eef0 7a60 	vmov.f32	s15, s1
  8001c0c:	ed84 7b00 	vstr	d7, [r4]
+				break;
  8001c10:	e02f      	b.n	8001c72 <nmea_parser+0x15a>
+			}
+			case '1':
+			{
+				ptr = strchr(ptr, ',');
  8001c12:	212c      	movs	r1, #44	; 0x2c
  8001c14:	6978      	ldr	r0, [r7, #20]
  8001c16:	f004 f956 	bl	8005ec6 <strchr>
  8001c1a:	6178      	str	r0, [r7, #20]
+				*va_arg(args, uint16_t *) = strtol(++ptr, NULL, 10);
  8001c1c:	697b      	ldr	r3, [r7, #20]
  8001c1e:	3301      	adds	r3, #1
  8001c20:	617b      	str	r3, [r7, #20]
@@ -2614,11 +3097,17 @@ Disassembly of section .text:
  8001c34:	681b      	ldr	r3, [r3, #0]
  8001c36:	b28a      	uxth	r2, r1
  8001c38:	801a      	strh	r2, [r3, #0]
+				break;
  8001c3a:	e01a      	b.n	8001c72 <nmea_parser+0x15a>
+			}
+			case '3':
+			{
+				ptr = strchr(ptr, ',');
  8001c3c:	212c      	movs	r1, #44	; 0x2c
  8001c3e:	6978      	ldr	r0, [r7, #20]
  8001c40:	f004 f941 	bl	8005ec6 <strchr>
  8001c44:	6178      	str	r0, [r7, #20]
+				*va_arg(args, uint32_t *) = strtol(++ptr, NULL, 10);
  8001c46:	697b      	ldr	r3, [r7, #20]
  8001c48:	3301      	adds	r3, #1
  8001c4a:	617b      	str	r3, [r7, #20]
@@ -2633,13 +3122,19 @@ Disassembly of section .text:
  8001c5e:	681b      	ldr	r3, [r3, #0]
  8001c60:	460a      	mov	r2, r1
  8001c62:	601a      	str	r2, [r3, #0]
+				break;
  8001c64:	e005      	b.n	8001c72 <nmea_parser+0x15a>
+			}
+			default:
+			{
+				*va_arg(args, uint8_t *) = 0;
  8001c66:	68fb      	ldr	r3, [r7, #12]
  8001c68:	1d1a      	adds	r2, r3, #4
  8001c6a:	60fa      	str	r2, [r7, #12]
  8001c6c:	681b      	ldr	r3, [r3, #0]
  8001c6e:	2200      	movs	r2, #0
  8001c70:	701a      	strb	r2, [r3, #0]
+	for(uint32_t i=0; i < strlen(formats); i++)
  8001c72:	693b      	ldr	r3, [r7, #16]
  8001c74:	3301      	adds	r3, #1
  8001c76:	613b      	str	r3, [r7, #16]
@@ -2649,10 +3144,16 @@ Disassembly of section .text:
  8001c80:	693b      	ldr	r3, [r7, #16]
  8001c82:	4293      	cmp	r3, r2
  8001c84:	f4ff af55 	bcc.w	8001b32 <nmea_parser+0x1a>
+			}
+		}
+	}
+
+	ptr = strchr(package, '*');
  8001c88:	212a      	movs	r1, #42	; 0x2a
  8001c8a:	6878      	ldr	r0, [r7, #4]
  8001c8c:	f004 f91b 	bl	8005ec6 <strchr>
  8001c90:	6178      	str	r0, [r7, #20]
+	*va_arg(args, uint16_t *) = strtol(++ptr, NULL, 16);
  8001c92:	697b      	ldr	r3, [r7, #20]
  8001c94:	3301      	adds	r3, #1
  8001c96:	617b      	str	r3, [r7, #20]
@@ -2667,6 +3168,9 @@ Disassembly of section .text:
  8001caa:	681b      	ldr	r3, [r3, #0]
  8001cac:	b28a      	uxth	r2, r1
  8001cae:	801a      	strh	r2, [r3, #0]
+
+	va_end(args);
+}
  8001cb0:	bf00      	nop
  8001cb2:	3718      	adds	r7, #24
  8001cb4:	46bd      	mov	sp, r7
@@ -2675,10 +3179,17 @@ Disassembly of section .text:
  8001cbc:	4770      	bx	lr
 
 08001cbe <gsv_get_noMsg>:
+  * @brief   This function return number of GPGSV messages being output
+  * @param   *package: Pointer to the string, were noMsg must be found
+  * @retval  uint8_t Number of messages
+  */
+static uint8_t gsv_get_noMsg(char *buff)
+{
  8001cbe:	b580      	push	{r7, lr}
  8001cc0:	b082      	sub	sp, #8
  8001cc2:	af00      	add	r7, sp, #0
  8001cc4:	6078      	str	r0, [r7, #4]
+	return strtol(&buff[7], NULL, 10);
  8001cc6:	687b      	ldr	r3, [r7, #4]
  8001cc8:	3307      	adds	r3, #7
  8001cca:	220a      	movs	r2, #10
@@ -2687,16 +3198,25 @@ Disassembly of section .text:
  8001cd0:	f003 f94c 	bl	8004f6c <strtol>
  8001cd4:	4603      	mov	r3, r0
  8001cd6:	b2db      	uxtb	r3, r3
+}
  8001cd8:	4618      	mov	r0, r3
  8001cda:	3708      	adds	r7, #8
  8001cdc:	46bd      	mov	sp, r7
  8001cde:	bd80      	pop	{r7, pc}
 
 08001ce0 <NEO6M_GLLCallBack>:
+  * @param  *package: Pointer to the received message package.
+  * @retval  None
+  */
+
+__weak void NEO6M_GLLCallBack(void *package)
+{
  8001ce0:	b480      	push	{r7}
  8001ce2:	b083      	sub	sp, #12
  8001ce4:	af00      	add	r7, sp, #0
  8001ce6:	6078      	str	r0, [r7, #4]
+
+}
  8001ce8:	bf00      	nop
  8001cea:	370c      	adds	r7, #12
  8001cec:	46bd      	mov	sp, r7
@@ -2704,10 +3224,15 @@ Disassembly of section .text:
  8001cf2:	4770      	bx	lr
 
 08001cf4 <NEO6M_GGACallBack>:
+
+__weak void NEO6M_GGACallBack(void *package)
+{
  8001cf4:	b480      	push	{r7}
  8001cf6:	b083      	sub	sp, #12
  8001cf8:	af00      	add	r7, sp, #0
  8001cfa:	6078      	str	r0, [r7, #4]
+
+}
  8001cfc:	bf00      	nop
  8001cfe:	370c      	adds	r7, #12
  8001d00:	46bd      	mov	sp, r7
@@ -2715,10 +3240,15 @@ Disassembly of section .text:
  8001d06:	4770      	bx	lr
 
 08001d08 <NEO6M_GSACallBack>:
+
+__weak void NEO6M_GSACallBack(void *package)
+{
  8001d08:	b480      	push	{r7}
  8001d0a:	b083      	sub	sp, #12
  8001d0c:	af00      	add	r7, sp, #0
  8001d0e:	6078      	str	r0, [r7, #4]
+
+}
  8001d10:	bf00      	nop
  8001d12:	370c      	adds	r7, #12
  8001d14:	46bd      	mov	sp, r7
@@ -2726,10 +3256,15 @@ Disassembly of section .text:
  8001d1a:	4770      	bx	lr
 
 08001d1c <NEO6M_GSVCallBack>:
+
+__weak void NEO6M_GSVCallBack(void *package)
+{
  8001d1c:	b480      	push	{r7}
  8001d1e:	b083      	sub	sp, #12
  8001d20:	af00      	add	r7, sp, #0
  8001d22:	6078      	str	r0, [r7, #4]
+
+}
  8001d24:	bf00      	nop
  8001d26:	370c      	adds	r7, #12
  8001d28:	46bd      	mov	sp, r7
@@ -2737,10 +3272,18 @@ Disassembly of section .text:
  8001d2e:	4770      	bx	lr
 
 08001d30 <NEO6M_VTGCallBack>:
+{
+
+}
+
+__weak void NEO6M_VTGCallBack(void *package)
+{
  8001d30:	b480      	push	{r7}
  8001d32:	b083      	sub	sp, #12
  8001d34:	af00      	add	r7, sp, #0
  8001d36:	6078      	str	r0, [r7, #4]
+
+}
  8001d38:	bf00      	nop
  8001d3a:	370c      	adds	r7, #12
  8001d3c:	46bd      	mov	sp, r7
