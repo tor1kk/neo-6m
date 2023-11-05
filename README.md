@@ -15,10 +15,10 @@ ___
 
 For more details about NMEA messages and the NEO-6M module, please visit this [document](https://content.u-blox.com/sites/default/files/products/documents/u-blox6_ReceiverDescrProtSpec_%28GPS.G6-SW-10018%29_Public.pdf).
 ___
-### To use this library, you must:
+### To use this library in your project, follow these steps:
 * Enable and configure the UART peripheral used with the module. The baud rate should be set to 9600, and interrupts must be enabled.
-* Add neo-6m.h and neo-6m.c to your project.
-* Include neo-6m.h in your project file.
+* Add `neo-6m.h` and `neo-6m.c` to your project.
+* Include `neo-6m.h` in your project file.
   
   ```
   #include "neo-6m.h"
@@ -30,12 +30,12 @@ ___
   
   UART_HandleTypeDef *gps_uart = &huart1;    //huart1 as example
   ```
-* Select the messages you require and enable them using the corresponding function. (In most cases, using RMC will suffice.)
+* Select the messages you require and enable them using the corresponding function. (In most cases, using `RMC` will suffice.)
 
   ```
   NEO6M_AddExpectedMessage(&neo6mh, RMC);
   ```
-* Call the NEO6M_MessageHandler() function within the HAL_UART_RxCpltCallback function.
+* Call the `NEO6M_MessageHandler` function within the `HAL_UART_RxCpltCallback` function.
   
   ```
   void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -99,7 +99,7 @@ ___
   
   ```
 ___
-### FAQ 
+### NOTE 
 * During testing, I discovered a bug: when all packet types are used simultaneously, the GGA packet is not received.
   Currently, I'm unsure how to rectify this issue. Hence, if the GGA packet is essential for you, it might be beneficial to disable other packet types.
   Nevertheless, you can verify this on your MCU.
